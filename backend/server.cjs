@@ -1,15 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
-const mongoose = require('mongoose');
+const path = require('path');
 
 const app = express();
-
-// MongoDB Connection
-mongoose.connect('mongodb://127.0.0.1:27017/student-auth-app')
-    .then(() => console.log('✅ MongoDB Connected'))
-    .catch(err => console.error('❌ MongoDB Error:', err));
 
 // Middleware
 app.use(bodyParser.json());
@@ -17,12 +11,50 @@ app.use(session({
     secret: 'yourSecretKey',
     resave: false,
     saveUninitialized: true,
-    store: MongoStore.create({ mongoUrl: 'mongodb://127.0.0.1:27017/student-auth-app' })
 }));
 
-// Routes
-const authRoutes = require('./routes/auth');  // 
-app.use('/api/auth', authRoutes);
+// Temporary in-memory user store
+let users = [];
+
+// Register
+app.post('/api/auth/register', (req, res) => {
+    const { username, password } = req.body;
+    if (users.find(u => u.username === username)) {
+        return res.status(400).json({ message: 'User already exists' });
+    }
+    users.push({ username, password });
+    res.json({ message: 'User registered successfully' });
+});
+
+// Login
+app.post('/api/auth/login', (req, res) => {
+    const { username, password } = req.body;
+    const user = users.find(u => u.username === username && u.password === password);
+    if (!user) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    req.session.user = user;
+    res.json({ message: 'Login successful', user: { username: user.username } });
+});
+
+// Profile
+app.get('/api/profile', (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+    res.json({ user: req.session.user });
+});
+
+// Logout
+app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.json({ message: 'Logged out successfully' });
+    });
+});
+
+// Serve frontend (public folder)
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Start Server
-app.listen(8080, () => console.log('🚀 Server running at http://localhost:8080'));
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));

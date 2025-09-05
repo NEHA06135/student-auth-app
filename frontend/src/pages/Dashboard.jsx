@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import API_URL from "../api";
+import { API_URL } from "../api";
 
 export default function Dashboard() {
   const [message, setMessage] = useState("");

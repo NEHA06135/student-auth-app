@@ -1,0 +1,17 @@
+{
+  "name": "student-auth-backend",
+  "version": "1.0.0",
+  "description": "Simple student auth app without database",
+  "main": "server.cjs",
+  "scripts": {
+    "start": "node server.cjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.19.2",
+    "express-session": "^1.17.3"
+  }
+}
